@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { type HourPoint, bestHourSlots, fmtHH, comfortScore } from "@/lib/weather-utils";
+import { comfortScore } from "@/lib/weather-utils";
 
 interface WeeklyForecastResponse {
   timezone: string;
@@ -30,12 +30,11 @@ interface DayForecast {
 interface WeeklyForecastProps {
   coords: { lat: number; lon: number } | null;
   preferredTime: "any" | "morning" | "day" | "evening";
-  allowDark: boolean;
   selectedDate: string;
   onDateSelect: (date: string) => void;
 }
 
-export function WeeklyForecast({ coords, preferredTime, allowDark, selectedDate, onDateSelect }: WeeklyForecastProps) {
+export function WeeklyForecast({ coords, preferredTime, selectedDate, onDateSelect }: WeeklyForecastProps) {
   const [forecast, setForecast] = useState<DayForecast[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -101,8 +100,8 @@ export function WeeklyForecast({ coords, preferredTime, allowDark, selectedDate,
         });
 
         setForecast(weeklyData);
-      } catch (e: any) {
-        setError(e?.message || "Помилка завантаження тижневого прогнозу");
+      } catch (e: unknown) {
+        setError(e instanceof Error ? e.message : "Помилка завантаження тижневого прогнозу");
       } finally {
         setLoading(false);
       }

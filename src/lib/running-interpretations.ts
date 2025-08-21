@@ -48,7 +48,7 @@ export function getHumidityInterpretation(humidity: number, temperature: number,
   const messages = interpretations[language];
 
   // Adjust thresholds based on temperature
-  let dryThreshold = 40;
+  const dryThreshold = 40;
   let comfortableThreshold = 60;
   let humidThreshold = 75;
   let veryHumidThreshold = 85;

@@ -1,18 +1,34 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { t } from "@/lib/translations";
 
 interface LocationDisplayProps {
   coords: { lat: number; lon: number } | null;
   onLocationChange: (coords: { lat: number; lon: number }) => void;
+  language?: "EN" | "UA";
 }
 
-export function LocationDisplay({ coords, onLocationChange }: LocationDisplayProps) {
+export function LocationDisplay({ coords, onLocationChange, language = "UA" }: LocationDisplayProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [locationName, setLocationName] = useState("");
-  const [displayLocation, setDisplayLocation] = useState("Завантаження...");
+  const [displayLocation, setDisplayLocation] = useState(t("loading", language));
   const [loading, setLoading] = useState(false);
-  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [searchResults, setSearchResults] = useState<Array<{
+    lat: string;
+    lon: string;
+    display_name: string;
+    address?: {
+      city?: string;
+      town?: string;
+      village?: string;
+      state?: string;
+      province?: string;
+      region?: string;
+      country?: string;
+    };
+    name?: string;
+  }>>([]);
 
   // Get location name from coordinates using reverse geocoding
   const getLocationName = async (lat: number, lon: number) => {
@@ -77,7 +93,21 @@ export function LocationDisplay({ coords, onLocationChange }: LocationDisplayPro
     setLoading(false);
   };
 
-  const handleLocationSelect = (result: any) => {
+  const handleLocationSelect = (result: {
+    lat: string;
+    lon: string;
+    display_name: string;
+    address?: {
+      city?: string;
+      town?: string;
+      village?: string;
+      state?: string;
+      province?: string;
+      region?: string;
+      country?: string;
+    };
+    name?: string;
+  }) => {
     const lat = parseFloat(result.lat);
     const lon = parseFloat(result.lon);
     
@@ -103,7 +133,7 @@ export function LocationDisplay({ coords, onLocationChange }: LocationDisplayPro
     if (!navigator.geolocation) return;
     
     setLoading(true);
-    setDisplayLocation("Отримую локацію...");
+    setDisplayLocation(t("loadingLocation", language));
     navigator.geolocation.getCurrentPosition(
       async (position) => {
         const coords = {
@@ -119,7 +149,7 @@ export function LocationDisplay({ coords, onLocationChange }: LocationDisplayPro
       },
       (error) => {
         console.error("Geolocation failed:", error);
-        setDisplayLocation("Не вдалося отримати локацію");
+        setDisplayLocation(t("locationError", language));
         setLoading(false);
       }
     );
@@ -129,7 +159,7 @@ export function LocationDisplay({ coords, onLocationChange }: LocationDisplayPro
     return (
       <div className="glass rounded-xl p-4 space-y-3">
         <div className="flex items-center justify-between">
-          <h4 className="body-medium text-foreground">Змінити локацію</h4>
+          <h4 className="body-medium text-foreground">{t("changeLocation", language)}</h4>
           <button
             onClick={() => setIsEditing(false)}
             className="text-foreground-muted hover:text-foreground"
@@ -141,7 +171,7 @@ export function LocationDisplay({ coords, onLocationChange }: LocationDisplayPro
         <div className="space-y-2">
           <input
             type="text"
-            placeholder="Введіть назву міста..."
+            placeholder={t("searchPlaceholder", language)}
             value={locationName}
             onChange={(e) => {
               setLocationName(e.target.value);
@@ -193,7 +223,7 @@ export function LocationDisplay({ coords, onLocationChange }: LocationDisplayPro
             disabled={loading}
             className="text-sm text-blue hover:text-pink transition-colors duration-150 body-medium"
           >
-            📍 Моя поточна локація
+{t("currentLocation", language)}
           </button>
         </div>
       </div>
@@ -208,7 +238,7 @@ export function LocationDisplay({ coords, onLocationChange }: LocationDisplayPro
       <div className="flex items-center justify-between">
         <div>
           <div className="text-xs text-foreground-muted body uppercase tracking-wide">
-            Локація
+            {t("location", language)}
           </div>
           <div className="text-sm body-medium text-foreground group-hover:text-blue transition-colors duration-150">
             {displayLocation}

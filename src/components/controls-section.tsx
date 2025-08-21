@@ -20,7 +20,7 @@ interface ControlsSectionProps {
 interface SelectProps {
   label: string;
   value: string | number;
-  onChange: (value: any) => void;
+  onChange: (value: string | number) => void;
   options: Array<{ value: string | number; label: string }>;
 }
 
@@ -140,7 +140,7 @@ export function ControlsSection({
         <GradientSelect
           label={t('intensity', language)}
           value={intensity}
-          onChange={setIntensity}
+          onChange={(value) => setIntensity(value as "light" | "moderate" | "intense")}
           options={intensityOptions}
         />
       </div>
@@ -149,14 +149,14 @@ export function ControlsSection({
         <GradientSelect
           label={t('gender', language)}
           value={gender}
-          onChange={setGender}
+          onChange={(value) => setGender(value as "male" | "female" | "prefer_not_to_say")}
           options={genderOptions}
         />
         
         <GradientSelect
           label={t('preferredTime', language)}
           value={preferredTime}
-          onChange={setPreferredTime}
+          onChange={(value) => setPreferredTime(value as "any" | "morning" | "day" | "evening")}
           options={timeOptions}
         />
       </div>

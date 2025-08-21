@@ -7,7 +7,7 @@ interface QuickAdviceCardProps {
   error: string | null;
   quick: string | null;
   current: HourPoint | null;
-  lastUpdated?: Date;
+  lastUpdated?: Date | null;
   onRefresh?: () => void;
   selectedDate: string;
   language?: "EN" | "UA";

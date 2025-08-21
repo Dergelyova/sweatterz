@@ -174,9 +174,9 @@ export function waterAdvice(
   const electrolyte = t >= 24 || rh >= 80 || intensity === "intense" || durationMin >= 90;
   
   // Additional recommendations
-  let beforeWorkout = Math.round(total * 0.2);
-  let duringWorkout = Math.round(total * 0.6);
-  let afterWorkout = Math.round(total * 0.2);
+  const beforeWorkout = Math.round(total * 0.2);
+  const duringWorkout = Math.round(total * 0.6);
+  const afterWorkout = Math.round(total * 0.2);
   
   return { 
     ml: total, 

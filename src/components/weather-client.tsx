@@ -20,6 +20,7 @@ import { HourlyTiles } from "./hourly-tiles";
 import { WeeklyForecast } from "./weekly-forecast";
 import { LocationDisplay } from "./location-display";
 import { usePreferences } from "@/hooks/use-preferences";
+import { t, translations } from "@/lib/translations";
 
 export function WeatherClient() {
   const { preferences, updatePreferences, isLoaded } = usePreferences();
@@ -119,8 +120,8 @@ export function WeatherClient() {
       }
       
       setLastUpdated(new Date());
-    } catch (e: any) {
-      setError(e?.message || "Помилка завантаження погоди");
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Помилка завантаження погоди");
     } finally {
       setLoading(false);
     }
@@ -149,7 +150,7 @@ export function WeatherClient() {
     }
   };
 
-  const currentHour = selectedHour || hours?.[0];
+  const currentHour = selectedHour || hours?.[0] || null;
   const best = useMemo(
     () => hours ? bestHourSlots(hours, preferences.allowDark, preferences.preferredTime) : [],
     [hours, preferences.allowDark, preferences.preferredTime]
@@ -180,26 +181,31 @@ export function WeatherClient() {
 
   const quick = useMemo(() => {
     if (!currentHour || !outfit || !spf || !water) return null;
-    const bestStr = best.map((b) => fmtHH(b.time)).slice(0, 2).join(" або ");
-    return `Сьогодні ~${Math.round(currentHour.t)}°C. Одягни ${outfit.top}, ${
-      outfit.bottom
-    }${outfit.extras.length ? ", " + outfit.extras.join(", ") : ""}; SPF ${
-      spf.spf
-    }. Візьми ${water.ml} мл води. Найкращий час: ${bestStr}.`;
-  }, [currentHour, outfit, spf, water, best]);
+    const orText = preferences.language === "EN" ? " or " : " або ";
+    const bestStr = best.map((b) => fmtHH(b.time)).slice(0, 2).join(orText);
+    return translations[preferences.language].todayTemplate(
+      Math.round(currentHour.t),
+      outfit.top,
+      outfit.bottom,
+      outfit.extras,
+      spf.spf,
+      water.ml,
+      bestStr
+    );
+  }, [currentHour, outfit, spf, water, best, preferences.language]);
 
   const warnings = useMemo(() => {
     if (!currentHour) return [];
     const warns: string[] = [];
     
-    if (currentHour.t >= 30) warns.push("Висока температура — уникай прямого сонця");
-    if (currentHour.t <= 0) warns.push("Обледеніння — будь обережним на дорозі");
-    if (currentHour.wind >= 25) warns.push("Сильний вітер — може ускладнити біг");
-    if (currentHour.precip >= 70) warns.push("Високий ризик дощу — розглянь закритий маршрут");
-    if (currentHour.uv >= 8) warns.push("Дуже високий UV — обов'язковий захист");
+    if (currentHour.t >= 30) warns.push(t("highTemp", preferences.language));
+    if (currentHour.t <= 0) warns.push(t("freezing", preferences.language));
+    if (currentHour.wind >= 25) warns.push(t("strongWind", preferences.language));
+    if (currentHour.precip >= 70) warns.push(t("highRain", preferences.language));
+    if (currentHour.uv >= 8) warns.push(t("highUV", preferences.language));
     
     return warns;
-  }, [currentHour]);
+  }, [currentHour, preferences.language]);
 
   if (!isLoaded) {
     return (
@@ -235,11 +241,12 @@ export function WeatherClient() {
               setCoords(newCoords);
               setSelectedDate(new Date().toISOString().split('T')[0]); // Reset to today when location changes
             }}
+            language={preferences.language}
           />
         </div>
 
         <div className="glass rounded-2xl p-6">
-          <h3 className="heading text-lg text-foreground mb-4">Налаштування</h3>
+          <h3 className="heading text-lg text-foreground mb-4">{t("settings", preferences.language)}</h3>
           <ControlsSection
             duration={preferences.duration}
             setDuration={(duration) => updatePreferences({ duration })}
@@ -251,6 +258,7 @@ export function WeatherClient() {
             setAllowDark={(allowDark) => updatePreferences({ allowDark })}
             preferredTime={preferences.preferredTime}
             setPreferredTime={(preferredTime) => updatePreferences({ preferredTime })}
+            language={preferences.language}
           />
         </div>
 
@@ -279,7 +287,6 @@ export function WeatherClient() {
             <WeeklyForecast
               coords={coords}
               preferredTime={preferences.preferredTime}
-              allowDark={preferences.allowDark}
               selectedDate={selectedDate}
               onDateSelect={handleDateSelect}
             />

@@ -21,6 +21,7 @@ function WeatherBadge({ icon, value, unit, label }: WeatherBadgeProps) {
 
 import { Tooltip } from "./tooltip";
 import { getWindInterpretation, getHumidityInterpretation, getFeelsLikeInterpretation } from "@/lib/running-interpretations";
+import { t } from "@/lib/translations";
 
 interface WeatherBadgesProps {
   temperature: number;
@@ -47,7 +48,7 @@ export function WeatherBadges({
         icon="🌡️"
         value={Math.round(temperature)}
         unit="°C"
-        label="Temp"
+        label={t("temp", language)}
       />
       
       <Tooltip content={getFeelsLikeInterpretation(temperature, feelsLike, language)}>
@@ -55,7 +56,7 @@ export function WeatherBadges({
           icon="🌡️"
           value={Math.round(feelsLike)}
           unit="°C"
-          label="Feels like"
+          label={t("feelsLike", language)}
         />
       </Tooltip>
       
@@ -64,7 +65,7 @@ export function WeatherBadges({
           icon="💧"
           value={humidity}
           unit="%"
-          label="Humidity"
+          label={t("humidity", language)}
         />
       </Tooltip>
       
@@ -73,20 +74,20 @@ export function WeatherBadges({
           icon="🌬️"
           value={Math.round(windSpeed)}
           unit="km/h"
-          label="Wind"
+          label={t("wind", language)}
         />
       </Tooltip>
       
       <WeatherBadge
         icon="☀️"
         value={uvIndex}
-        label="UV Index"
+        label={t("uvIndex", language)}
       />
       <WeatherBadge
         icon="🌧️"
         value={precipProbability}
         unit="%"
-        label="Rain"
+        label={t("rain", language)}
       />
     </div>
   );

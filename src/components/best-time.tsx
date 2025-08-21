@@ -1,33 +1,18 @@
-import { type HourPoint, fmtHH } from "@/lib/weather-utils";
+import { type HourPoint, fmtHH, getRunningCondition } from "@/lib/weather-utils";
+import { t } from "@/lib/translations";
 
-interface ComfortBarProps {
-  score: number;
-  maxScore: number;
-}
-
-function ComfortBar({ score, maxScore }: ComfortBarProps) {
-  const comfortLevel = Math.max(0, (maxScore - score) / maxScore);
-  const widthPercentage = comfortLevel * 100;
-  
-  return (
-    <div className="w-full h-2 bg-card-border rounded-full overflow-hidden">
-      <div 
-        className="h-full bg-gradient-to-r from-blue to-pink rounded-full transition-all duration-300"
-        style={{ width: `${widthPercentage}%` }}
-      />
-    </div>
-  );
-}
 
 interface BestTimeSlotProps {
   timeSlot: HourPoint;
   rank: number;
   maxScore: number;
+  language?: "EN" | "UA";
 }
 
-function BestTimeSlot({ timeSlot, rank, maxScore }: BestTimeSlotProps) {
+function BestTimeSlot({ timeSlot, rank, maxScore, language = "UA" }: BestTimeSlotProps) {
   const medals = ['🥇', '🥈', '🥉'];
   const medal = medals[rank - 1] || '🏃';
+  const runningCondition = getRunningCondition(timeSlot, language);
 
   return (
     <div className="p-4 rounded-xl bg-card border border-card-border hover:border-foreground-muted/30 transition-colors duration-150">
@@ -39,32 +24,34 @@ function BestTimeSlot({ timeSlot, rank, maxScore }: BestTimeSlotProps) {
               {fmtHH(timeSlot.time)}
             </div>
             <div className="text-xs text-foreground-subtle">
-              #{rank} найкращий час
+              {t("rankBestTime", language).replace("{rank}", rank.toString())}
             </div>
           </div>
         </div>
-        <div className="body-medium text-foreground text-lg">
-          {Math.round(timeSlot.t)}°C
+        <div className="text-right">
+          <div className="body-medium text-foreground text-lg">
+            {Math.round(timeSlot.t)}°C
+          </div>
+          {Math.abs(timeSlot.feelsLike - timeSlot.t) > 2 && (
+            <div className="text-xs text-foreground-muted">
+              {t("feelsLike", language)} {Math.round(timeSlot.feelsLike)}°
+            </div>
+          )}
         </div>
       </div>
       
-      <div className="mb-2">
-        <ComfortBar score={timeSlot.score} maxScore={maxScore} />
-      </div>
-      
-      <div className="flex flex-wrap gap-1 text-xs">
-        <span className="px-2 py-1 bg-card-hover rounded text-foreground-subtle">
-          💧 {timeSlot.rh}%
-        </span>
-        <span className="px-2 py-1 bg-card-hover rounded text-foreground-subtle">
-          🌬️ {Math.round(timeSlot.wind)} km/h
-        </span>
-        <span className="px-2 py-1 bg-card-hover rounded text-foreground-subtle">
-          ☀️ UV {timeSlot.uv}
-        </span>
-        <span className="px-2 py-1 bg-card-hover rounded text-foreground-subtle">
-          🌧️ {timeSlot.precip}%
-        </span>
+      {/* Why this time is good for running */}
+      <div className="bg-card-hover rounded-lg p-3 mb-3">
+        <div className="text-xs font-medium text-foreground mb-2">
+          {runningCondition.explanation}
+        </div>
+        <div className="space-y-1">
+          {runningCondition.factors.map((factor, index) => (
+            <div key={index} className="text-xs text-foreground-muted">
+              {factor}
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
@@ -72,15 +59,16 @@ function BestTimeSlot({ timeSlot, rank, maxScore }: BestTimeSlotProps) {
 
 interface BestTimeCardProps {
   best: HourPoint[];
+  language?: "EN" | "UA";
 }
 
-export function BestTimeCard({ best }: BestTimeCardProps) {
+export function BestTimeCard({ best, language = "UA" }: BestTimeCardProps) {
   if (!best.length) {
     return (
       <div className="glass rounded-2xl p-6">
-        <h3 className="heading text-lg text-foreground mb-4">Найкращий час для бігу</h3>
+        <h3 className="heading text-lg text-foreground mb-4">{t("bestTimeForRunning", language)}</h3>
         <div className="text-foreground-muted body">
-          Немає даних про погоду для розрахунку оптимального часу
+          {t("noWeatherDataForOptimal", language)}
         </div>
       </div>
     );
@@ -90,7 +78,7 @@ export function BestTimeCard({ best }: BestTimeCardProps) {
   
   return (
     <div className="glass rounded-2xl p-6 hover-lift">
-      <h3 className="heading text-lg text-foreground mb-4">Найкращий час для бігу</h3>
+      <h3 className="heading text-lg text-foreground mb-4">{t("bestTimeForRunning", language)}</h3>
       
       <div className="space-y-3">
         {best.slice(0, 3).map((timeSlot, index) => (
@@ -99,6 +87,7 @@ export function BestTimeCard({ best }: BestTimeCardProps) {
             timeSlot={timeSlot}
             rank={index + 1}
             maxScore={maxScore}
+            language={language}
           />
         ))}
       </div>
@@ -106,7 +95,7 @@ export function BestTimeCard({ best }: BestTimeCardProps) {
       {best.length > 3 && (
         <div className="mt-4 text-center">
           <button className="text-sm text-foreground-muted hover:text-foreground transition-colors duration-150 body">
-            Показати більше часів →
+            {t("showMoreTimes", language)}
           </button>
         </div>
       )}

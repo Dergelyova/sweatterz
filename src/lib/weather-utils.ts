@@ -46,6 +46,102 @@ export function comfortScore(
   return tempPenalty + humidityPenalty + windPenalty + uvPenalty + rainPenalty;
 }
 
+export interface RunningCondition {
+  level: "excellent" | "good" | "fair" | "poor";
+  icon: string;
+  borderColor: string;
+  explanation: string;
+  factors: string[];
+}
+
+export function getRunningCondition(
+  hour: HourPoint,
+  language: "EN" | "UA" = "UA"
+): RunningCondition {
+  const { t, rh, wind, uv, precip, score } = hour;
+  
+  const factors: string[] = [];
+  const isEN = language === "EN";
+  
+  // Analyze each factor
+  if (t >= 8 && t <= 18) {
+    factors.push(isEN ? "✅ Ideal temperature" : "✅ Ідеальна температура");
+  } else if (t < 0) {
+    factors.push(isEN ? "❄️ Very cold" : "❄️ Дуже холодно");
+  } else if (t > 25) {
+    factors.push(isEN ? "🔥 Hot" : "🔥 Жарко");
+  } else {
+    factors.push(isEN ? "🌡️ Acceptable temperature" : "🌡️ Прийнятна температура");
+  }
+  
+  if (rh <= 60) {
+    factors.push(isEN ? "💨 Good humidity" : "💨 Хороша вологість");
+  } else if (rh > 80) {
+    factors.push(isEN ? "💧 Very humid" : "💧 Дуже волого");
+  } else {
+    factors.push(isEN ? "💧 Moderate humidity" : "💧 Помірна вологість");
+  }
+  
+  if (wind <= 10) {
+    factors.push(isEN ? "🍃 Light wind" : "🍃 Легкий вітер");
+  } else if (wind > 20) {
+    factors.push(isEN ? "💨 Strong wind" : "💨 Сильний вітер");
+  } else {
+    factors.push(isEN ? "🌬️ Moderate wind" : "🌬️ Помірний вітер");
+  }
+  
+  if (uv <= 2) {
+    factors.push(isEN ? "☁️ Low UV" : "☁️ Низький УФ");
+  } else if (uv >= 7) {
+    factors.push(isEN ? "☀️ High UV - protection needed" : "☀️ Високий УФ - потрібен захист");
+  } else {
+    factors.push(isEN ? "🌤️ Moderate UV" : "🌤️ Помірний УФ");
+  }
+  
+  if (precip <= 10) {
+    factors.push(isEN ? "☀️ No rain" : "☀️ Без дощу");
+  } else if (precip >= 60) {
+    factors.push(isEN ? "🌧️ High rain risk" : "🌧️ Високий ризик дощу");
+  } else {
+    factors.push(isEN ? "🌦️ Some rain possible" : "🌦️ Можливий дощ");
+  }
+  
+  // Determine overall condition based on score
+  if (score <= 8) {
+    return {
+      level: "excellent",
+      icon: "🏃‍♂️",
+      borderColor: "border-green-400",
+      explanation: isEN ? "Excellent conditions for running!" : "Відмінні умови для бігу!",
+      factors
+    };
+  } else if (score <= 15) {
+    return {
+      level: "good", 
+      icon: "👍",
+      borderColor: "border-blue",
+      explanation: isEN ? "Good running conditions" : "Хороші умови для бігу",
+      factors
+    };
+  } else if (score <= 25) {
+    return {
+      level: "fair",
+      icon: "⚠️",
+      borderColor: "border-yellow-400",
+      explanation: isEN ? "Fair conditions - some challenges" : "Задовільні умови - є виклики",
+      factors
+    };
+  } else {
+    return {
+      level: "poor",
+      icon: "❌", 
+      borderColor: "border-red-400",
+      explanation: isEN ? "Challenging conditions for running" : "Складні умови для бігу",
+      factors
+    };
+  }
+}
+
 export interface DetailedOutfit {
   top: string;
   bottom: string;

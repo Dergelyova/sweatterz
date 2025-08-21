@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { comfortScore } from "@/lib/weather-utils";
+import { comfortScore, bestHourSlots, type HourPoint, fmtHH } from "@/lib/weather-utils";
+import { t } from "@/lib/translations";
 
 interface WeeklyForecastResponse {
   timezone: string;
@@ -12,6 +13,15 @@ interface WeeklyForecastResponse {
     precipitation_probability_max: number[];
     uv_index_max: number[];
     wind_speed_10m_max: number[];
+  };
+  hourly: {
+    time: string[];
+    temperature_2m: number[];
+    apparent_temperature: number[];
+    relative_humidity_2m: number[];
+    precipitation_probability: number[];
+    uv_index: number[];
+    wind_speed_10m: number[];
   };
 }
 
@@ -30,11 +40,13 @@ interface DayForecast {
 interface WeeklyForecastProps {
   coords: { lat: number; lon: number } | null;
   preferredTime: "any" | "morning" | "day" | "evening";
+  allowDark: boolean;
   selectedDate: string;
   onDateSelect: (date: string) => void;
+  language?: "EN" | "UA";
 }
 
-export function WeeklyForecast({ coords, preferredTime, selectedDate, onDateSelect }: WeeklyForecastProps) {
+export function WeeklyForecast({ coords, preferredTime, allowDark, selectedDate, onDateSelect, language = "UA" }: WeeklyForecastProps) {
   const [forecast, setForecast] = useState<DayForecast[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -60,6 +72,17 @@ export function WeeklyForecast({ coords, preferredTime, selectedDate, onDateSele
             "wind_speed_10m_max",
           ].join(",")
         );
+        url.searchParams.set(
+          "hourly",
+          [
+            "temperature_2m",
+            "apparent_temperature",
+            "relative_humidity_2m", 
+            "precipitation_probability",
+            "uv_index",
+            "wind_speed_10m",
+          ].join(",")
+        );
         url.searchParams.set("forecast_days", "7");
         url.searchParams.set("timezone", "auto");
 
@@ -68,6 +91,35 @@ export function WeeklyForecast({ coords, preferredTime, selectedDate, onDateSele
         
         const data: WeeklyForecastResponse = await res.json();
         const daily = data.daily;
+        const hourly = data.hourly;
+
+        // Convert hourly data to HourPoint format
+        const allHourPoints: HourPoint[] = hourly.time.map((time, i) => ({
+          time,
+          t: hourly.temperature_2m[i],
+          feelsLike: hourly.apparent_temperature[i],
+          rh: hourly.relative_humidity_2m[i],
+          uv: hourly.uv_index[i],
+          wind: hourly.wind_speed_10m[i],
+          precip: hourly.precipitation_probability[i],
+          score: comfortScore(
+            hourly.temperature_2m[i],
+            hourly.relative_humidity_2m[i],
+            hourly.wind_speed_10m[i],
+            hourly.uv_index[i],
+            hourly.precipitation_probability[i]
+          ),
+        }));
+
+        // Group hourly data by date
+        const hoursByDate: Record<string, HourPoint[]> = {};
+        allHourPoints.forEach(point => {
+          const date = point.time.split('T')[0];
+          if (!hoursByDate[date]) {
+            hoursByDate[date] = [];
+          }
+          hoursByDate[date].push(point);
+        });
 
         const weeklyData: DayForecast[] = daily.time.map((date, i) => {
           const dateObj = new Date(date);
@@ -81,10 +133,16 @@ export function WeeklyForecast({ coords, preferredTime, selectedDate, onDateSele
           // Calculate a simplified comfort score for the day
           const dayComfortScore = comfortScore(avgTemp, 60, windMax, uvMax, precipMax);
 
-          // Determine best time based on preferences
-          let bestTime = "08:00";
-          if (preferredTime === "day") bestTime = "14:00";
-          else if (preferredTime === "evening") bestTime = "19:00";
+          // Calculate real best time using hourly data
+          const dayHours = hoursByDate[date] || [];
+          let bestTime = "08:00"; // fallback
+          
+          if (dayHours.length > 0) {
+            const bestHours = bestHourSlots(dayHours, allowDark, preferredTime);
+            if (bestHours.length > 0) {
+              bestTime = fmtHH(bestHours[0].time);
+            }
+          }
 
           return {
             date,
@@ -101,19 +159,19 @@ export function WeeklyForecast({ coords, preferredTime, selectedDate, onDateSele
 
         setForecast(weeklyData);
       } catch (e: unknown) {
-        setError(e instanceof Error ? e.message : "Помилка завантаження тижневого прогнозу");
+        setError(e instanceof Error ? e.message : t("weeklyForecastLoadError", language));
       } finally {
         setLoading(false);
       }
     }
 
     fetchWeeklyForecast();
-  }, [coords, preferredTime]);
+  }, [coords, preferredTime, allowDark]);
 
   if (loading) {
     return (
       <div className="glass rounded-2xl p-6">
-        <h3 className="heading text-lg text-foreground mb-4">Тижневий прогноз</h3>
+        <h3 className="heading text-lg text-foreground mb-4">{t("weeklyForecast", language)}</h3>
         <div className="flex items-center justify-center py-8">
           <div className="w-6 h-6 border-2 border-blue border-t-transparent rounded-full animate-spin" />
         </div>
@@ -124,28 +182,28 @@ export function WeeklyForecast({ coords, preferredTime, selectedDate, onDateSele
   if (error || !forecast) {
     return (
       <div className="glass rounded-2xl p-6">
-        <h3 className="heading text-lg text-foreground mb-4">Тижневий прогноз</h3>
+        <h3 className="heading text-lg text-foreground mb-4">{t("weeklyForecast", language)}</h3>
         <div className="text-red-400 body text-center py-8">
-          {error || "Не вдалося завантажити прогноз"}
+          {error || t("loadForecastError", language)}
         </div>
       </div>
     );
   }
 
   const getComfortLevel = (score: number) => {
-    if (score < 8) return { text: "Відмінно", color: "text-green-400" };
-    if (score < 15) return { text: "Добре", color: "text-blue" };
-    if (score < 25) return { text: "Задовільно", color: "text-yellow-400" };
-    return { text: "Складно", color: "text-red-400" };
+    if (score < 8) return { text: t("excellent", language), color: "text-green-400" };
+    if (score < 15) return { text: t("good", language), color: "text-blue" };
+    if (score < 25) return { text: t("fair", language), color: "text-yellow-400" };
+    return { text: t("difficult", language), color: "text-red-400" };
   };
 
   return (
     <div className="glass rounded-2xl p-6 hover-lift">
       <h3 className="heading text-lg text-foreground mb-4">
-        Тижневий прогноз для бігу
+{t("weeklyForecastForRunning", language)}
       </h3>
       
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-7 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-3">
         {forecast.map((day, index) => {
           const isToday = index === 0;
           const isSelected = day.date === selectedDate;
@@ -168,7 +226,7 @@ export function WeeklyForecast({ coords, preferredTime, selectedDate, onDateSele
             >
               <div className="text-center space-y-2">
                 <div className="body-medium text-foreground text-sm">
-                  {isToday ? 'Сьогодні' : day.day}
+                  {isToday ? t("today", language) : day.day}
                 </div>
                 
                 <div className="text-xs text-foreground-muted">
@@ -201,7 +259,7 @@ export function WeeklyForecast({ coords, preferredTime, selectedDate, onDateSele
 
                 <div className="border-t border-card-border pt-2 space-y-1">
                   <div className="text-xs text-foreground-muted">
-                    Краще о {day.bestTime}
+{t("bestAt", language)} {day.bestTime}
                   </div>
                   <div className={`text-xs font-medium ${comfort.color}`}>
                     {comfort.text}
@@ -215,7 +273,7 @@ export function WeeklyForecast({ coords, preferredTime, selectedDate, onDateSele
 
       <div className="mt-4 p-3 bg-card-hover rounded-lg">
         <div className="text-xs text-foreground-muted body text-center">
-          💡 Натисніть на день для детального прогнозу. Кольори показують комфортність умов для бігу.
+{t("clickDayForDetails", language)}
         </div>
       </div>
     </div>

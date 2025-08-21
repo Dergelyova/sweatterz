@@ -121,7 +121,7 @@ export function WeatherClient() {
       
       setLastUpdated(new Date());
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : "Помилка завантаження погоди");
+      setError(e instanceof Error ? e.message : t("weatherLoadError", preferences.language));
     } finally {
       setLoading(false);
     }
@@ -183,7 +183,7 @@ export function WeatherClient() {
     if (!currentHour || !outfit || !spf || !water) return null;
     const orText = preferences.language === "EN" ? " or " : " або ";
     const bestStr = best.map((b) => fmtHH(b.time)).slice(0, 2).join(orText);
-    return translations[preferences.language].todayTemplate(
+    return translations[preferences.language].adviceTemplate(
       Math.round(currentHour.t),
       outfit.top,
       outfit.bottom,
@@ -231,10 +231,11 @@ export function WeatherClient() {
           lastUpdated={lastUpdated}
           onRefresh={fetchWeatherData}
           selectedDate={selectedDate}
+          selectedHour={selectedHour}
           language={preferences.language}
         />
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-4">
           <LocationDisplay
             coords={coords}
             onLocationChange={(newCoords) => {
@@ -262,19 +263,19 @@ export function WeatherClient() {
           />
         </div>
 
-        {warnings.length > 0 && <SafetyWarning warnings={warnings} />}
+        {warnings.length > 0 && <SafetyWarning warnings={warnings} language={preferences.language} />}
 
         {!loading && !error && hours && (
           <>
             <div className="grid gap-6 lg:grid-cols-2">
               <div className="space-y-6">
-                {outfit && <WearCard outfit={outfit} />}
-                {spf && <SPFCard spf={spf} />}
+                {outfit && <WearCard outfit={outfit} language={preferences.language} />}
+                {spf && <SPFCard spf={spf} language={preferences.language} />}
               </div>
               
               <div className="space-y-6">
-                {water && <HydrationCard water={water} />}
-                <BestTimeCard best={best} />
+                {water && <HydrationCard water={water} language={preferences.language} />}
+                <BestTimeCard best={best} language={preferences.language} />
               </div>
             </div>
 
@@ -282,13 +283,16 @@ export function WeatherClient() {
               hours={hours} 
               onHourSelect={setSelectedHour}
               maxTiles={16}
+              language={preferences.language}
             />
 
             <WeeklyForecast
               coords={coords}
               preferredTime={preferences.preferredTime}
+              allowDark={preferences.allowDark}
               selectedDate={selectedDate}
               onDateSelect={handleDateSelect}
+              language={preferences.language}
             />
           </>
         )}

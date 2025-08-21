@@ -1,14 +1,16 @@
 import { Chip } from "./weather-badges";
 import { DetailedOutfit } from "@/lib/weather-utils";
+import { t } from "@/lib/translations";
 
 interface WearCardProps {
   outfit: DetailedOutfit;
+  language?: "EN" | "UA";
 }
 
-export function WearCard({ outfit }: WearCardProps) {
+export function WearCard({ outfit, language = "UA" }: WearCardProps) {
   return (
     <div className="glass rounded-2xl p-6 hover-lift">
-      <h3 className="heading text-lg text-foreground mb-4">Що одягти</h3>
+      <h3 className="heading text-lg text-foreground mb-4">{t("whatToWear", language)}</h3>
       
       <div className="space-y-4">
         {/* Basic clothing */}
@@ -16,7 +18,7 @@ export function WearCard({ outfit }: WearCardProps) {
           <div className="flex items-start space-x-3">
             <div className="text-2xl">👕</div>
             <div className="flex-1">
-              <div className="body-medium text-foreground text-sm">Верх</div>
+              <div className="body-medium text-foreground text-sm">{t("top", language)}</div>
               <div className="body text-foreground-muted text-sm">{outfit.top}</div>
             </div>
           </div>
@@ -24,7 +26,7 @@ export function WearCard({ outfit }: WearCardProps) {
           <div className="flex items-start space-x-3">
             <div className="text-2xl">🩳</div>
             <div className="flex-1">
-              <div className="body-medium text-foreground text-sm">Низ</div>
+              <div className="body-medium text-foreground text-sm">{t("bottom", language)}</div>
               <div className="body text-foreground-muted text-sm">{outfit.bottom}</div>
             </div>
           </div>
@@ -36,7 +38,7 @@ export function WearCard({ outfit }: WearCardProps) {
             <div className="flex items-start space-x-3">
               <div className="text-2xl">👟</div>
               <div className="flex-1">
-                <div className="body-medium text-foreground text-sm mb-2">Взуття та шкарпетки</div>
+                <div className="body-medium text-foreground text-sm mb-2">{t("footwearSocks", language)}</div>
                 <div className="flex flex-wrap gap-1">
                   {outfit.footwear.map((item, index) => (
                     <Chip key={index} size="sm">
@@ -55,7 +57,7 @@ export function WearCard({ outfit }: WearCardProps) {
             <div className="flex items-start space-x-3">
               <div className="text-2xl">🧢</div>
               <div className="flex-1">
-                <div className="body-medium text-foreground text-sm mb-2">Головні убори та окуляри</div>
+                <div className="body-medium text-foreground text-sm mb-2">{t("headwearGlasses", language)}</div>
                 <div className="flex flex-wrap gap-1">
                   {outfit.headwear.map((item, index) => (
                     <Chip key={index} variant="gradient" size="sm">
@@ -74,7 +76,7 @@ export function WearCard({ outfit }: WearCardProps) {
             <div className="flex items-start space-x-3">
               <div className="text-2xl">🧤</div>
               <div className="flex-1">
-                <div className="body-medium text-foreground text-sm mb-2">Аксесуари</div>
+                <div className="body-medium text-foreground text-sm mb-2">{t("accessories", language)}</div>
                 <div className="flex flex-wrap gap-1">
                   {outfit.accessories.map((item, index) => (
                     <Chip key={index} size="sm">
@@ -90,7 +92,7 @@ export function WearCard({ outfit }: WearCardProps) {
         {/* Extras */}
         {outfit.extras.length > 0 && (
           <div className="border-t border-card-border pt-3">
-            <div className="body-medium text-foreground text-sm mb-2">Додатково</div>
+            <div className="body-medium text-foreground text-sm mb-2">{t("additional", language)}</div>
             <div className="flex flex-wrap gap-1">
               {outfit.extras.map((extra, index) => (
                 <Chip key={index} variant="gradient" size="sm">
@@ -110,9 +112,10 @@ interface SPFCardProps {
     spf: number;
     note: string;
   };
+  language?: "EN" | "UA";
 }
 
-export function SPFCard({ spf }: SPFCardProps) {
+export function SPFCard({ spf, language = "UA" }: SPFCardProps) {
   const getSPFColor = (spfValue: number) => {
     if (spfValue >= 50) return 'text-pink';
     if (spfValue >= 30) return 'text-yellow-400';
@@ -121,7 +124,7 @@ export function SPFCard({ spf }: SPFCardProps) {
 
   return (
     <div className="glass rounded-2xl p-6 hover-lift">
-      <h3 className="heading text-lg text-foreground mb-4">Захист від сонця</h3>
+      <h3 className="heading text-lg text-foreground mb-4">{t("sunProtection", language)}</h3>
       
       <div className="flex items-center space-x-4 mb-3">
         <div className="text-4xl">☀️</div>
@@ -148,21 +151,22 @@ interface HydrationCardProps {
     afterWorkout: number;
     recommendation: string;
   };
+  language?: "EN" | "UA";
 }
 
-export function HydrationCard({ water }: HydrationCardProps) {
+export function HydrationCard({ water, language = "UA" }: HydrationCardProps) {
   return (
     <div className="glass rounded-2xl p-6 hover-lift">
-      <h3 className="heading text-lg text-foreground mb-4">Гідратація</h3>
+      <h3 className="heading text-lg text-foreground mb-4">{t("hydration", language)}</h3>
       
       <div className="flex items-center space-x-4 mb-4">
         <div className="text-4xl">💧</div>
         <div>
           <div className="text-3xl font-bold text-blue">
-            {water.ml} мл
+{water.ml} {language === "EN" ? "ml" : "мл"}
           </div>
           <div className="body text-foreground-muted text-sm">
-            загальна кількість води
+{t("totalWaterAmount", language)}
           </div>
         </div>
       </div>
@@ -171,15 +175,15 @@ export function HydrationCard({ water }: HydrationCardProps) {
         <div className="grid grid-cols-3 gap-3 text-center">
           <div className="p-3 bg-card rounded-lg">
             <div className="text-lg font-bold text-blue">{water.beforeWorkout}</div>
-            <div className="text-xs text-foreground-muted">до</div>
+            <div className="text-xs text-foreground-muted">{t("before", language)}</div>
           </div>
           <div className="p-3 bg-card rounded-lg">
             <div className="text-lg font-bold text-pink">{water.duringWorkout}</div>
-            <div className="text-xs text-foreground-muted">під час</div>
+            <div className="text-xs text-foreground-muted">{t("during", language)}</div>
           </div>
           <div className="p-3 bg-card rounded-lg">
             <div className="text-lg font-bold text-blue">{water.afterWorkout}</div>
-            <div className="text-xs text-foreground-muted">після</div>
+            <div className="text-xs text-foreground-muted">{t("after", language)}</div>
           </div>
         </div>
 
@@ -193,7 +197,7 @@ export function HydrationCard({ water }: HydrationCardProps) {
       {water.electrolyte && (
         <div className="flex flex-wrap gap-2">
           <Chip variant="gradient" size="sm">
-            ⚡ Електроліти рекомендуються
+{t("electrolytesRecommended", language)}
           </Chip>
         </div>
       )}
@@ -203,9 +207,10 @@ export function HydrationCard({ water }: HydrationCardProps) {
 
 interface SafetyWarningProps {
   warnings: string[];
+  language?: "EN" | "UA";
 }
 
-export function SafetyWarning({ warnings }: SafetyWarningProps) {
+export function SafetyWarning({ warnings, language = "UA" }: SafetyWarningProps) {
   if (warnings.length === 0) return null;
 
   return (
@@ -213,7 +218,7 @@ export function SafetyWarning({ warnings }: SafetyWarningProps) {
       <div className="flex items-start space-x-3">
         <div className="text-2xl">⚠️</div>
         <div>
-          <h4 className="heading text-foreground text-sm mb-2">Попередження</h4>
+          <h4 className="heading text-foreground text-sm mb-2">{t("warning", language)}</h4>
           <ul className="space-y-1">
             {warnings.map((warning, index) => (
               <li key={index} className="body text-foreground-muted text-sm flex items-start space-x-2">

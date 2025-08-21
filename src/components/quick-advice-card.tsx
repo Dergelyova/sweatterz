@@ -1,5 +1,5 @@
 import { WeatherBadges } from "./weather-badges";
-import { type HourPoint } from "@/lib/weather-utils";
+import { type HourPoint, fmtHH } from "@/lib/weather-utils";
 import { t } from "@/lib/translations";
 
 interface QuickAdviceCardProps {
@@ -10,6 +10,7 @@ interface QuickAdviceCardProps {
   lastUpdated?: Date | null;
   onRefresh?: () => void;
   selectedDate: string;
+  selectedHour?: HourPoint | null;
   language?: "EN" | "UA";
 }
 
@@ -21,6 +22,7 @@ export function QuickAdviceCard({
   lastUpdated,
   onRefresh,
   selectedDate,
+  selectedHour,
   language = "UA"
 }: QuickAdviceCardProps) {
   return (
@@ -34,15 +36,36 @@ export function QuickAdviceCard({
             <h2 className="heading text-xl text-foreground">
               {t("quickAdvice", language)}
             </h2>
-            {selectedDate !== new Date().toISOString().split('T')[0] && (
-              <div className="text-sm text-blue body-medium">
-                {new Date(selectedDate).toLocaleDateString('uk-UA', { 
-                  weekday: 'long', 
-                  month: 'long', 
-                  day: 'numeric' 
-                })}
-              </div>
-            )}
+            {/* Date and Time Context */}
+            <div className="text-sm text-blue body-medium space-y-1">
+              {selectedDate !== new Date().toISOString().split('T')[0] ? (
+                <div>
+                  {new Date(selectedDate).toLocaleDateString(language === "EN" ? 'en-US' : 'uk-UA', { 
+                    weekday: 'long', 
+                    month: 'long', 
+                    day: 'numeric' 
+                  })}
+                </div>
+              ) : (
+                <div>
+                  {language === "EN" ? "Today" : "Сьогодні"}
+                </div>
+              )}
+              {selectedHour && (
+                <div className="text-xs">
+                  {(() => {
+                    const now = new Date();
+                    const selectedTime = new Date(selectedHour.time);
+                    const isToday = selectedDate === now.toISOString().split('T')[0];
+                    const isCurrentHour = isToday && 
+                      selectedTime.getHours() === now.getHours() &&
+                      selectedTime.getDate() === now.getDate();
+                    
+                    return isCurrentHour ? t("now", language) : fmtHH(selectedHour.time);
+                  })()}
+                </div>
+              )}
+            </div>
           </div>
           
           <div className="flex items-center space-x-2">
@@ -101,7 +124,17 @@ export function QuickAdviceCard({
         {!loading && !error && current && (
           <div className="border-t border-card-border pt-4">
             <div className="text-xs text-foreground-muted body uppercase tracking-wide mb-2">
-              {t("currentConditions", language)}
+              {(() => {
+                const now = new Date();
+                const isToday = selectedDate === now.toISOString().split('T')[0];
+                const isCurrentHour = selectedHour && new Date(selectedHour.time).getHours() === now.getHours() && isToday;
+                
+                if (isCurrentHour) {
+                  return t("currentConditions", language);
+                } else {
+                  return t("conditions", language);
+                }
+              })()}
             </div>
             <WeatherBadges
               temperature={current.t}

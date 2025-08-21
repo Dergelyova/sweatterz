@@ -119,7 +119,7 @@ export const translations = {
     // Hourly weather
     hourlyWeather: "Hourly Weather",
     clickForDetails: "Click for detailed forecast",
-    rain: "Rain!",
+    rainAlert: "Rain!",
     selected: "Selected",
     detailsWillShow: "detailed forecast for this time will be shown above",
     showAllHours: "Show all {count} hours →",
@@ -245,7 +245,7 @@ export const translations = {
     // Hourly weather
     hourlyWeather: "Погода по годинах",
     clickForDetails: "Натисніть для детального прогнозу",
-    rain: "Дощ!",
+    rainAlert: "Дощ!",
     selected: "Вибрано",
     detailsWillShow: "детальний прогноз для цього часу буде показано вище",
     showAllHours: "Показати всі {count} годин →",

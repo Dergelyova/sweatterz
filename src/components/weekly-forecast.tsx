@@ -166,7 +166,7 @@ export function WeeklyForecast({ coords, preferredTime, allowDark, selectedDate,
     }
 
     fetchWeeklyForecast();
-  }, [coords, preferredTime, allowDark]);
+  }, [coords, preferredTime, allowDark, language]);
 
   if (loading) {
     return (

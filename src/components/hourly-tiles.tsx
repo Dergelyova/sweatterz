@@ -75,7 +75,7 @@ function HourlyTile({ hour, isSelected, isCurrent, onClick, language = "UA" }: H
         <div className="h-5 flex items-center justify-center">
           {hour.precip > 60 && (
             <div className="text-xs text-pink font-medium">
-              {t("rain", language)}!
+              {t("rainAlert", language)}
             </div>
           )}
         </div>

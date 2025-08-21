@@ -5,11 +5,10 @@ import { t } from "@/lib/translations";
 interface BestTimeSlotProps {
   timeSlot: HourPoint;
   rank: number;
-  maxScore: number;
   language?: "EN" | "UA";
 }
 
-function BestTimeSlot({ timeSlot, rank, maxScore, language = "UA" }: BestTimeSlotProps) {
+function BestTimeSlot({ timeSlot, rank, language = "UA" }: BestTimeSlotProps) {
   const medals = ['🥇', '🥈', '🥉'];
   const medal = medals[rank - 1] || '🏃';
   const runningCondition = getRunningCondition(timeSlot, language);
@@ -74,8 +73,6 @@ export function BestTimeCard({ best, language = "UA" }: BestTimeCardProps) {
     );
   }
 
-  const maxScore = Math.max(...best.map(slot => slot.score));
-  
   return (
     <div className="glass rounded-2xl p-6 hover-lift">
       <h3 className="heading text-lg text-foreground mb-4">{t("bestTimeForRunning", language)}</h3>
@@ -86,7 +83,6 @@ export function BestTimeCard({ best, language = "UA" }: BestTimeCardProps) {
             key={timeSlot.time}
             timeSlot={timeSlot}
             rank={index + 1}
-            maxScore={maxScore}
             language={language}
           />
         ))}
